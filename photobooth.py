@@ -1,8 +1,11 @@
 #!/usr/bin/env python
-import pygame
 import sys
 import subprocess
-
+try:
+    import pygame
+except ImportError:
+    print("Failed to import pygame. Maybe install it?")
+    sys.exit(1)
 
 ## SETTINGS ##
 # chdkptpbin = "libs/chdkptp/chdkptp"
@@ -40,7 +43,7 @@ def displayPhoto(background, filename):
     imgposition.centerx = background.get_rect().centerx
     imgposition.centery = background.get_rect().centery
     background.blit(img, imgposition)
-
+chdkptp/
 
 def displayWelcomeScreen(background):
     font = pygame.font.Font(None, 400)
@@ -68,7 +71,7 @@ def main():
     background = pygame.Surface(screen.get_size())
 
     # chdkptp = subprocess.Popen(chdkptpbin, env=chdkptpenv)
-    # print(chdkptp.communicate('connect'))
+    # print(chdkptp.communicate('connect'))chdkptp/
 
     picturenumber = -1
     countdown = -1
