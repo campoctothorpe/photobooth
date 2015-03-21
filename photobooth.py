@@ -70,8 +70,9 @@ while True:
     else:  # We are not even counting anymore, the picture has been taken
         img = pygame.image.load(filename)
         imgposition = img.get_rect()
-        textpos.centerx = background.get_rect().centerx
-        background.blit(img, img.get_rect())
+        imgposition.centerx = background.get_rect().centerx
+        imgposition.centery = background.get_rect().centery
+        background.blit(img, imgposition)
     screen.blit(background, (0, 0))
     pygame.display.flip()
     c.tick(1)
