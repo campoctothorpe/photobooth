@@ -18,7 +18,7 @@ textcolor = 255, 255, 255
 def takePhoto(countdown, background, filename):
 
     font = pygame.font.Font(None, 1000)
-    text = font.render("", 1, (255, 255, 255))
+    text = font.render("", 1, textcolor)
 
     print("[tick] Countdown %s" % countdown)
     countdown = countdown - 1
@@ -27,7 +27,7 @@ def takePhoto(countdown, background, filename):
         if countdown == 2:
             subprocess.Popen([takephotocmd, filename])
     elif countdown == 0:  # We've reached the end of the countdown loop
-        text = font.render("smile", 1, (255, 255, 255))
+        text = font.render("smile", 1, textcolor)
     textpos = text.get_rect()
     textpos.centerx = background.get_rect().centerx
     background.blit(text, textpos)
@@ -40,6 +40,15 @@ def displayPhoto(background, filename):
     imgposition.centerx = background.get_rect().centerx
     imgposition.centery = background.get_rect().centery
     background.blit(img, imgposition)
+
+
+def displayWelcomeScreen(background):
+    font = pygame.font.Font(None, 400)
+    text = font.render("#photobooth", 1, textcolor)
+    textpos = text.get_rect()
+    textpos.centerx = background.get_rect().centerx
+    textpos.centery = background.get_rect().centery
+    background.blit(text, textpos)
 
 
 def main():
@@ -61,23 +70,30 @@ def main():
     # chdkptp = subprocess.Popen(chdkptpbin, env=chdkptpenv)
     # print(chdkptp.communicate('connect'))
 
-    picturenumber = 0
-
+    picturenumber = -1
+    countdown = -1
     filename = "%s/%s.jpg" % (photostorage, picturenumber)
-
-    countdown = 4
 
     while True:
         for event in pygame.event.get():
             print(event)
-            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
+            if event.type == pygame.QUIT:
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == 32 and countdown < 0:  # spacebar
+                    countdown = 4
+                    picturenumber = picturenumber + 1
+                    filename = "%s/%s.jpg" % (photostorage, picturenumber)
+                elif event.key in [113, 27]:  # q, esc
+                    sys.exit()
         print("[tick]")
         background.fill(bgcolor)
-        if countdown >= 0:
+        if countdown >= 0:  # We're getting setup to take a picture or currently taking it
             countdown = takePhoto(countdown, background, filename)
-        else:
+        elif picturenumber >= 0:  # We just took a picture and are showing it
             displayPhoto(background, filename)
+        else:  # We haven't taken a picture, nor are we displaying one
+            displayWelcomeScreen(background)
         screen.blit(background, (0, 0))
         pygame.display.flip()
         c.tick(1)
