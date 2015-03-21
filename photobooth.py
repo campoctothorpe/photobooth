@@ -9,7 +9,7 @@ chdkptpenv = os.environ.copy()
 chdkptpenv['LUA_PATH'] = "/home/finn/gitshit/octothorpe-photobooth/libs/chdkptp/lua/?.lua"
 photostorage = "Pictures/"
 
-fullscreen = False
+fullscreen = True
 
 pygame.init()
 
@@ -20,7 +20,7 @@ else:
     size = width, height = (displayinfo.current_w/2), (displayinfo.current_h/2)
 
 speed = [2, 2]
-black = 0, 0, 0
+bgcolor = 0, 0, 0
 
 
 screen = pygame.display.set_mode(size)
@@ -54,6 +54,8 @@ while True:
     if height < 1 or width < 1:
         sys.exit(0)
 
+    background.fill(bgcolor)
+
     if countdown >= 0:  # If we're still in the countdown loop
         countdown = countdown - 1
         if countdown > 0:  # We're actually still counting
@@ -64,9 +66,12 @@ while True:
             text = font.render("smile", 1, (255, 255, 255))
         textpos = text.get_rect()
         textpos.centerx = background.get_rect().centerx
-        screen.blit(background, (0, 0))
+        background.blit(text, textpos)
     else:  # We are not even counting anymore, the picture has been taken
         img = pygame.image.load(filename)
-        screen.blit(img, (0, 0))
+        imgposition = img.get_rect()
+        textpos.centerx = background.get_rect().centerx
+        background.blit(img, img.get_rect())
+    screen.blit(background, (0, 0))
     pygame.display.flip()
     c.tick(1)
