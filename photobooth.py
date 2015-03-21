@@ -35,6 +35,14 @@ def takePhoto(countdown, background, filename):
     return countdown
 
 
+def displayPhoto(background, filename):
+    img = pygame.image.load(filename)
+    imgposition = img.get_rect()
+    imgposition.centerx = background.get_rect().centerx
+    imgposition.centery = background.get_rect().centery
+    background.blit(img, imgposition)
+
+
 def main():
     pygame.init()
 
@@ -62,6 +70,7 @@ def main():
 
     while True:
         for event in pygame.event.get():
+            print(event)
             if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
                 sys.exit()
         print("[tick]")
@@ -69,11 +78,7 @@ def main():
         if countdown >= 0:
             countdown = takePhoto(countdown, background, filename)
         else:
-            img = pygame.image.load(filename)
-            imgposition = img.get_rect()
-            imgposition.centerx = background.get_rect().centerx
-            imgposition.centery = background.get_rect().centery
-            background.blit(img, imgposition)
+            displayPhoto(background, filename)
         screen.blit(background, (0, 0))
         pygame.display.flip()
         c.tick(1)
