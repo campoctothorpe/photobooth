@@ -43,7 +43,7 @@ def displayPhoto(background, filename):
     imgposition.centerx = background.get_rect().centerx
     imgposition.centery = background.get_rect().centery
     background.blit(img, imgposition)
-chdkptp/
+
 
 def displayWelcomeScreen(background):
     font = pygame.font.Font(None, 400)
