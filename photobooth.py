@@ -13,7 +13,7 @@ except ImportError:
 # chdkptpenv['LUA_PATH'] = "/home/finn/gitshit/octothorpe-photobooth/libs/chdkptp/lua/?.lua"
 photostorage = "Pictures/"
 takephotocmd = "./take-photo-shim.sh"
-fullscreen = False
+fullscreen = True
 bgcolor = 0, 0, 0
 textcolor = 255, 255, 255
 
@@ -75,6 +75,7 @@ def main():
 
     picturenumber = -1
     countdown = -1
+    displayTimeout = 1
     filename = "%s/%s.jpg" % (photostorage, picturenumber)
 
     while True:
@@ -93,8 +94,15 @@ def main():
         background.fill(bgcolor)
         if countdown >= 0:  # We're getting setup to take a picture or currently taking it
             countdown = takePhoto(countdown, background, filename)
-        elif picturenumber >= 0:  # We just took a picture and are showing it
-            displayPhoto(background, filename)
+        elif picturenumber >= 0:
+            if displayTimeout > 0:  # We just took a picture and are showing it
+                displayPhoto(background, filename)
+                displayTimeout = displayTimeout - 1
+            else:
+                displayTimeout = 1
+                picturenumber = picturenumber + 1
+                countdown = 4
+
         else:  # We haven't taken a picture, nor are we displaying one
             displayWelcomeScreen(background)
         screen.blit(background, (0, 0))
