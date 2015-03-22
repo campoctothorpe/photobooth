@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import sys
 import subprocess
+import time
+import calendar
 try:
     import pygame
 except ImportError:
@@ -76,7 +78,7 @@ def main():
     picturenumber = -1
     countdown = -1
     displayTimeout = 1
-    stripnumber = 0
+    stripnumber = calendar.timegm(time.gmtime())
     filename = "%s/%s-%s.jpg" % (photostorage, stripnumber, picturenumber)
 
     while True:
@@ -89,7 +91,7 @@ def main():
                 if event.key == 32 and countdown < 0:  # spacebar
                     countdown = 4
                     picturenumber = 0
-                    stripnumber = stripnumber + 1
+                    stripnumber = calendar.timegm(time.gmtime())
                     filename = "%s/%s-%s.jpg" % (photostorage, stripnumber, picturenumber)
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
