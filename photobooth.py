@@ -13,7 +13,7 @@ except ImportError:
 # chdkptpenv['LUA_PATH'] = "/home/finn/gitshit/octothorpe-photobooth/libs/chdkptp/lua/?.lua"
 photostorage = "Pictures/"
 takephotocmd = "./take-photo-shim.sh"
-fullscreen = True
+fullscreen = "-w" not in sys.argv  # -w for windowed
 bgcolor = 0, 0, 0
 textcolor = 255, 255, 255
 
@@ -76,9 +76,11 @@ def main():
     picturenumber = -1
     countdown = -1
     displayTimeout = 1
-    filename = "%s/%s.jpg" % (photostorage, picturenumber)
+    stripnumber = 0
+    filename = "%s/%s-%s.jpg" % (photostorage, stripnumber, picturenumber)
 
     while True:
+        print("[tick] countdown = %s stripnumber = %s picturenumber = %s displayTimeout = %s" % (countdown, stripnumber, picturenumber, displayTimeout))
         for event in pygame.event.get():
             print(event)
             if event.type == pygame.QUIT:
@@ -86,8 +88,9 @@ def main():
             if event.type == pygame.KEYDOWN:
                 if event.key == 32 and countdown < 0:  # spacebar
                     countdown = 4
-                    picturenumber = picturenumber + 1
-                    filename = "%s/%s.jpg" % (photostorage, picturenumber)
+                    picturenumber = 0
+                    stripnumber = stripnumber + 1
+                    filename = "%s/%s-%s.jpg" % (photostorage, stripnumber, picturenumber)
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
         print("[tick]")
@@ -98,11 +101,13 @@ def main():
             if displayTimeout > 0:  # We just took a picture and are showing it
                 displayPhoto(background, filename)
                 displayTimeout = displayTimeout - 1
-            else:
+            elif picturenumber < 3:
                 displayTimeout = 1
                 picturenumber = picturenumber + 1
                 countdown = 4
-
+                filename = "%s/%s-%s.jpg" % (photostorage, stripnumber, picturenumber)
+            else:
+                picturenumber = -1
         else:  # We haven't taken a picture, nor are we displaying one
             displayWelcomeScreen(background)
         screen.blit(background, (0, 0))
