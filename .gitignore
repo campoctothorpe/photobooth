@@ -4,6 +4,7 @@ include/
 lib/
 local/
 Pictures
+photobooth.cfg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
