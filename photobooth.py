@@ -6,6 +6,7 @@ import configparser
 import sys
 import time
 import calendar
+from itertools import chain
 
 config = {
     "photostorage": "Pictures",
@@ -47,6 +48,39 @@ def waitForInput(stream, waitFor=">"):
     print(char)
 
 
+## The following code was stolen from http://www.pygame.org/wiki/TextWrapping
+def truncline(text, font, maxwidth):
+    real = len(text)
+    stext = text
+    l = font.size(text)[0]
+    cut = 0
+    a = 0
+    done = 1
+    while l > maxwidth:
+        a = a+1
+        n = text.rsplit(None, a)[0]
+        if stext == n:
+            cut += 1
+            stext = n[:-cut]
+        else:
+            stext = n
+        l = font.size(stext)[0]
+        real = len(stext)
+        done = 0
+    return real, done, stext
+
+
+def wrapline(text, font, maxwidth):
+    done = 0
+    wrapped = []
+
+    while not done:
+        nl, done, stext = truncline(text, font, maxwidth)
+        wrapped.append(stext.strip())
+        text = text[nl:]
+    return wrapped
+
+
 def takePhotoSet(chdkptp, game):
     stripnumber = calendar.timegm(time.gmtime())
     filename = "%s/%s" % (config['photostorage'], stripnumber)
@@ -66,11 +100,15 @@ def takePhotoSet(chdkptp, game):
 
 def renderText(textstr, game, fontSize=1000):
     font = pygame.font.Font(None, fontSize)
-    text = font.render(textstr, 1, config['textcolor'])
-    textpos = text.get_rect()
-    textpos.centerx = game['background'].get_rect().centerx
-    game['background'].blit(text, textpos)
-    game['screen'].blit(game['background'], (0, 0))
+    lines = wrapline(textstr, font, game['size'][0]-100)
+    height = font.size(lines[0])[1]
+    for line in range(0, len(lines)):
+        text = font.render(lines[line], 1, config['textcolor'])
+        textpos = text.get_rect()
+        textpos.centerx = game['background'].get_rect().centerx
+        textpos.centery = height*line + 20
+        game['background'].blit(text, textpos)
+        game['screen'].blit(game['background'], (0, 0))
     pygame.display.flip()
     game['clock'].tick()
 
