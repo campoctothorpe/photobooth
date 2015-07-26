@@ -5,6 +5,7 @@ import os
 import configparser
 import sys
 import time
+from PIL import Image
 import calendar
 
 config = {
@@ -98,6 +99,24 @@ def renderText(textstr, game, fontSize=1000, top=None):
     game['clock'].tick()
 
 
+def makeStrip(prefix, mode="RGB", color="white"):
+    images = []
+    for i in range(0, config['photosPerSet']):
+        images.append(Image.open("%s-%s.jpg" % (prefix, i)))
+    width = max(img.size[0] for img in images)
+    height = sum(img.size[1] for img in images)
+    image = Image.new(mode, (width, height), color)
+
+    left, upper = 0, 0
+    for img in images:
+        image.paste(img, (left, upper))
+        upper += img.size[1]
+
+    outputName = "%s-strip.jpg" % prefix
+    image.save(outputName, "JPEG", quality=80, optimize=True)
+    return outputName
+
+
 def takePhotoSet(chdkptp, game):
     stripnumber = calendar.timegm(time.gmtime())
     filename = "%s/%s" % (config['photostorage'], stripnumber)
@@ -109,9 +128,13 @@ def takePhotoSet(chdkptp, game):
         doCountdown(game)
         takePhoto(chdkptp)
         os.rename("%s-last.jpg" % filename, "%s-%s.jpg" % (filename, photonumber))
-        displayPhoto("%s-%s.jpg" % (filename, photonumber), game)
+        if photonumber != config['photosPerSet']-1:
+            # Don't display the last picture because we're going to show it in the strip
+            displayPhoto("%s-%s.jpg" % (filename, photonumber), game)
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
+    strip = makeStrip(filename)
+    displayPhoto(strip, game)
     waitForInput(chdkptp.stdout)
 
 
@@ -132,9 +155,11 @@ def takePhoto(chdkptp):
     waitForInput(chdkptp.stdout)
 
 
-def displayPhoto(filename, game):
+def displayPhoto(filename, game, sleep=None, width=800, height=1066):
+    if sleep is None:
+        sleep = config['displayPhotoFor']
     img = pygame.image.load(filename)
-    img = pygame.transform.scale(img, (1066, 800))
+    img = pygame.transform.scale(img, (height, width))
     imgposition = img.get_rect()
     imgposition.centerx = game['background'].get_rect().centerx
     imgposition.centery = game['background'].get_rect().centery
