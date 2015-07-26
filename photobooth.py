@@ -1,32 +1,27 @@
-#!/usr/bin/env python
-import sys
+#!/usr/bin/env python3
+import pygame
 import subprocess
+import os
+import configparser
+import sys
 import time
 import calendar
-import ConfigParser
-import os
-try:
-    import pygame
-except ImportError:
-    print("Failed to import pygame. Maybe install it?")
-    sys.exit(1)
 
-## DEFAULTS ##
-# chdkptpbin = "libs/chdkptp/chdkptp"
-# chdkptpenv = os.environ.copy()
-# chdkptpenv['LUA_PATH'] = "/home/finn/gitshit/octothorpe-photobooth/libs/chdkptp/lua/?.lua"
 config = {
-    "photostorage": "Pictures/",
-    "takephotocmd": "./take-photo-shim.sh",
+    "photostorage": "Pictures",
+    "chdkptp": "chdkptp",
     "fullscreen": "-w" not in sys.argv,  # -w for windowed
     "bgcolor": (0, 0, 0),
     "textcolor": (255, 255, 255),
-    "displayTimeout": 1
+    "displayTimeout": 5,
+    "photosPerSet": 4,
+    "countdown": 4,
+    "countdownSpeed": 1
 }
 
 
 def configure():
-    cf = ConfigParser.SafeConfigParser()
+    cf = configparser.SafeConfigParser()
     cf.read(['photobooth.cfg', os.path.expanduser('~/.photobooth.cfg')])
     if cf.has_section('photobooth'):
         for key in config:
@@ -43,40 +38,87 @@ def configure():
     print(config)
 
 
-def takePhoto(countdown, background, filename):
+def waitForInput(stream, waitFor=">"):
+    char = stream.read(1).decode('utf-8')
+    while char != waitFor:
+        print(char, end="")
+        sys.stdout.flush()
+        char = stream.read(1).decode('utf-8')
+    print(char)
 
-    font = pygame.font.Font(None, 1000)
-    text = font.render("", 1, config['textcolor'])
 
-    print("[tick] Countdown %s" % countdown)
-    countdown = countdown - 1
-    if countdown > 0:  # We're actually still counting
-        text = font.render(str(countdown), 1, config['textcolor'])
-        if countdown == 2:
-            subprocess.Popen([config['takephotocmd'], filename])
-    elif countdown == 0:  # We've reached the end of the countdown loop
-        text = font.render("smile", 1, config['textcolor'])
+def takePhotoSet(chdkptp, game):
+    stripnumber = calendar.timegm(time.gmtime())
+    filename = "%s/%s" % (config['photostorage'], stripnumber)
+    # Enter rsint mode
+    chdkptp.stdin.write(("rsint %s-last\n" % filename).encode())
+    waitForInput(chdkptp.stdout)
+    photonumber = 0
+    while photonumber < config['photosPerSet']:
+        doCountdown(game)
+        takePhoto(chdkptp)
+        os.rename("%s-last.jpg" % filename, "%s-%s.jpg" % (filename, photonumber))
+        displayPhoto("%s-%s.jpg" % (filename, photonumber), game)
+        photonumber += 1
+    chdkptp.stdin.write(b"q\n")
+    waitForInput(chdkptp.stdout)
+
+
+def renderText(textstr, game, fontSize=1000):
+    font = pygame.font.Font(None, fontSize)
+    text = font.render(textstr, 1, config['textcolor'])
     textpos = text.get_rect()
-    textpos.centerx = background.get_rect().centerx
-    background.blit(text, textpos)
-    return countdown
+    textpos.centerx = game['background'].get_rect().centerx
+    game['background'].blit(text, textpos)
+    game['screen'].blit(game['background'], (0, 0))
+    pygame.display.flip()
+    game['clock'].tick()
 
 
-def displayPhoto(background, filename):
+def doCountdown(game):
+    countdown = config['countdown']
+    while countdown >= 0:
+        game['background'].fill(config['bgcolor'])
+        if countdown > 0:
+            renderText(str(countdown), game, fontSize=1500)
+        elif countdown == 0:
+            renderText("smile", game)
+        countdown -= 1
+        time.sleep(config['countdownSpeed'])
+
+
+def takePhoto(chdkptp):
+    chdkptp.stdin.write(b"s\n")
+    waitForInput(chdkptp.stdout)
+
+
+def displayPhoto(filename, game):
     img = pygame.image.load(filename)
     imgposition = img.get_rect()
-    imgposition.centerx = background.get_rect().centerx
-    imgposition.centery = background.get_rect().centery
-    background.blit(img, imgposition)
+    imgposition.centerx = game['background'].get_rect().centerx
+    imgposition.centery = game['background'].get_rect().centery
+    game['background'].blit(img, imgposition)
+    game['screen'].blit(game['background'], (0, 0))
+    pygame.display.flip()
+    game['clock'].tick()
+    time.sleep(config['displayTimeout'])
 
 
-def displayWelcomeScreen(background):
-    font = pygame.font.Font(None, 400)
-    text = font.render("#photobooth", 1, config['textcolor'])
-    textpos = text.get_rect()
-    textpos.centerx = background.get_rect().centerx
-    textpos.centery = background.get_rect().centery
-    background.blit(text, textpos)
+def waitForTrigger(game):
+    triggered = False
+    game['background'].fill(config['bgcolor'])
+    renderText("Press Space to begin", game, fontSize=200)
+    while not triggered:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == 32:  # spacebar
+                    triggered = True
+                elif event.key in [113, 27]:  # q, esc
+                    sys.exit()
+        time.sleep(0.05)
+    print("triggered!!")
 
 
 def main():
@@ -88,58 +130,35 @@ def main():
     if config['fullscreen']:
         size = displayinfo.current_w, displayinfo.current_h
     else:
-        size = (displayinfo.current_w/2), (displayinfo.current_h/2)
+        size = 1800, 800
 
     screen = pygame.display.set_mode(size)
+
     if config['fullscreen']:
         pygame.display.toggle_fullscreen()
     c = pygame.time.Clock()
 
     background = pygame.Surface(screen.get_size())
 
-    # chdkptp = subprocess.Popen(chdkptpbin, env=chdkptpenv)
-    # print(chdkptp.communicate('connect'))chdkptp/
+    chdkptp = subprocess.Popen(config['chdkptp'],
+                               stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               bufsize=0)
+    waitForInput(chdkptp.stdout)
+    chdkptp.stdin.write(b"c\n")
+    print("Connecting to camera....")
+    waitForInput(chdkptp.stdout)
+    chdkptp.stdin.write(b"rec\n")
+    print("Entering shooting mode...")
+    waitForInput(chdkptp.stdout)
+    print("Annnd into the loop we go!")
 
-    picturenumber = -1
-    countdown = -1
-    displayTimeout = config['displayTimeout']
-    stripnumber = calendar.timegm(time.gmtime())
-    filename = "%s/%s-%s.jpg" % (config['photostorage'], stripnumber, picturenumber)
-
+    game = {"screen": screen, "background": background, "clock": c}
     while True:
-        print("[tick] countdown = %s stripnumber = %s picturenumber = %s displayTimeout = %s" % (countdown, stripnumber, picturenumber, displayTimeout))
-        for event in pygame.event.get():
-            print(event)
-            if event.type == pygame.QUIT:
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == 32 and countdown < 0:  # spacebar
-                    countdown = 4
-                    picturenumber = 0
-                    stripnumber = calendar.timegm(time.gmtime())
-                    filename = "%s/%s-%s.jpg" % (config['photostorage'], stripnumber, picturenumber)
-                elif event.key in [113, 27]:  # q, esc
-                    sys.exit()
-        print("[tick]")
-        background.fill(config['bgcolor'])
-        if countdown >= 0:  # We're getting setup to take a picture or currently taking it
-            countdown = takePhoto(countdown, background, filename)
-        elif picturenumber >= 0:
-            if displayTimeout > 0:  # We just took a picture and are showing it
-                displayPhoto(background, filename)
-                displayTimeout = displayTimeout - 1
-            elif picturenumber < 3:
-                displayTimeout = 1
-                picturenumber = picturenumber + 1
-                countdown = 4
-                filename = "%s/%s-%s.jpg" % (config['photostorage'], stripnumber, picturenumber)
-            else:
-                picturenumber = -1
-        else:  # We haven't taken a picture, nor are we displaying one
-            displayWelcomeScreen(background)
-        screen.blit(background, (0, 0))
-        pygame.display.flip()
-        c.tick(1)
+        waitForTrigger(game)
+        takePhotoSet(chdkptp, game)
+
 
 if __name__ == "__main__":
     main()
