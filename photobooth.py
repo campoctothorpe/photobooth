@@ -188,7 +188,6 @@ def displayPhoto(filename, game, sleep=None, size=None):
 
 def waitForTrigger(game):
     triggered = False
-    game['background'].fill(config['bgcolor'])
     renderText("Press the #BigRedButton to begin", game, fontSize=200)
     while not triggered:
         for event in pygame.event.get():
@@ -243,6 +242,7 @@ def main():
         "size": size
     }
 
+    game['background'].fill(config['bgcolor'])
     while True:
         waitForTrigger(game)
         takePhotoSet(chdkptp, game)
