@@ -207,7 +207,7 @@ def main():
     configure()
 
     pygame.init()
-
+    pygame.mouse.set_visible(False)
     displayinfo = pygame.display.Info()  # Find some info out about the display
     if config['fullscreen']:
         size = displayinfo.current_w, displayinfo.current_h
