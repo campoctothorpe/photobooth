@@ -80,12 +80,13 @@ def wrapline(text, font, maxwidth):
     return wrapped
 
 
-def renderText(textstr, game, fontSize=1000):
+def renderText(textstr, game, fontSize=1000, top=None):
     font = pygame.font.Font(None, fontSize)
     lines = wrapline(textstr, font, game['size'][0]-100)
     height = font.size(lines[0])[1]
     totalTextHeight = height * len(lines)
-    top = game['background'].get_rect().centery - (totalTextHeight/2)
+    if top is None:
+        top = game['background'].get_rect().centery - (totalTextHeight/2)
     for line in range(0, len(lines)):
         text = font.render(lines[line], 1, config['textcolor'])
         textpos = text.get_rect()
@@ -119,7 +120,7 @@ def doCountdown(game):
     while countdown >= 0:
         game['background'].fill(config['bgcolor'])
         if countdown > 0:
-            renderText(str(countdown), game, fontSize=1500)
+            renderText(str(countdown), game, fontSize=1500, top=0)
         elif countdown == 0:
             renderText("smile!", game, fontSize=500)
         countdown -= 1
