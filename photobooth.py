@@ -6,7 +6,6 @@ import configparser
 import sys
 import time
 import calendar
-from itertools import chain
 
 config = {
     "photostorage": "Pictures",
@@ -85,11 +84,14 @@ def renderText(textstr, game, fontSize=1000):
     font = pygame.font.Font(None, fontSize)
     lines = wrapline(textstr, font, game['size'][0]-100)
     height = font.size(lines[0])[1]
+    totalTextHeight = height * len(lines)
+    top = game['background'].get_rect().centery - (totalTextHeight/2)
+    print("totalTextHeight = %s top = %s centery = %s" % (totalTextHeight, top, game['background'].get_rect().centery))
     for line in range(0, len(lines)):
         text = font.render(lines[line], 1, config['textcolor'])
         textpos = text.get_rect()
         textpos.centerx = game['background'].get_rect().centerx
-        textpos.centery = height*0.5 + height*line
+        textpos.centery = top + height*line
         game['background'].blit(text, textpos)
         game['screen'].blit(game['background'], (0, 0))
     pygame.display.flip()
@@ -120,7 +122,7 @@ def doCountdown(game):
         if countdown > 0:
             renderText(str(countdown), game, fontSize=1500)
         elif countdown == 0:
-            renderText("smile!", game, fontSize=200)
+            renderText("smile!", game, fontSize=500)
         countdown -= 1
         time.sleep(config['countdownSpeed'])
 
