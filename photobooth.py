@@ -90,7 +90,6 @@ def renderText(textstr, game, fontSize=1000):
         textpos = text.get_rect()
         textpos.centerx = game['background'].get_rect().centerx
         textpos.centery = height*0.5 + height*line
-        print("Text position: %s" % textpos)
         game['background'].blit(text, textpos)
         game['screen'].blit(game['background'], (0, 0))
     pygame.display.flip()
