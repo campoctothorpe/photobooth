@@ -134,6 +134,7 @@ def takePhoto(chdkptp):
 
 def displayPhoto(filename, game):
     img = pygame.image.load(filename)
+    img = pygame.transform.scale(img, (1066, 800))
     imgposition = img.get_rect()
     imgposition.centerx = game['background'].get_rect().centerx
     imgposition.centery = game['background'].get_rect().centery
