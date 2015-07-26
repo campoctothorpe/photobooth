@@ -81,6 +81,22 @@ def wrapline(text, font, maxwidth):
     return wrapped
 
 
+def renderText(textstr, game, fontSize=1000):
+    font = pygame.font.Font(None, fontSize)
+    lines = wrapline(textstr, font, game['size'][0]-100)
+    height = font.size(lines[0])[1]
+    for line in range(0, len(lines)):
+        text = font.render(lines[line], 1, config['textcolor'])
+        textpos = text.get_rect()
+        textpos.centerx = game['background'].get_rect().centerx
+        textpos.centery = height*0.5 + height*line
+        print("Text position: %s" % textpos)
+        game['background'].blit(text, textpos)
+        game['screen'].blit(game['background'], (0, 0))
+    pygame.display.flip()
+    game['clock'].tick()
+
+
 def takePhotoSet(chdkptp, game):
     stripnumber = calendar.timegm(time.gmtime())
     filename = "%s/%s" % (config['photostorage'], stripnumber)
@@ -96,22 +112,6 @@ def takePhotoSet(chdkptp, game):
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
     waitForInput(chdkptp.stdout)
-
-
-def renderText(textstr, game, fontSize=1000):
-    font = pygame.font.Font(None, fontSize)
-    lines = wrapline(textstr, font, game['size'][0]-100)
-    height = font.size(lines[0])[1]
-    for line in range(0, len(lines)):
-        text = font.render(lines[line], 1, config['textcolor'])
-        textpos = text.get_rect()
-        textpos.centerx = game['background'].get_rect().centerx
-        textpos.centery = height + height*line
-        game['background'].blit(text, textpos)
-        game['screen'].blit(game['background'], (0, 0))
-    pygame.display.flip()
-    game['clock'].tick()
-
 
 def doCountdown(game):
     countdown = config['countdown']
@@ -145,7 +145,7 @@ def displayPhoto(filename, game):
 def waitForTrigger(game):
     triggered = False
     game['background'].fill(config['bgcolor'])
-    renderText("Press the #BigRedButton", game, fontSize=200)
+    renderText("Press the #BigRedButton to begin", game, fontSize=200)
     while not triggered:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
