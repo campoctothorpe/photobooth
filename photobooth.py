@@ -86,12 +86,13 @@ def renderText(textstr, game, fontSize=1000):
     height = font.size(lines[0])[1]
     totalTextHeight = height * len(lines)
     top = game['background'].get_rect().centery - (totalTextHeight/2)
-    print("totalTextHeight = %s top = %s centery = %s" % (totalTextHeight, top, game['background'].get_rect().centery))
+    print("totalTextHeight = %s top = %s centery = %s linecount = %s height = %s" % (totalTextHeight, top, game['background'].get_rect().centery, len(lines), height))
     for line in range(0, len(lines)):
         text = font.render(lines[line], 1, config['textcolor'])
         textpos = text.get_rect()
         textpos.centerx = game['background'].get_rect().centerx
-        textpos.centery = top + height*line
+        textpos.top = top + height*line
+        print("Positioning line %s (%s) at %s" % (line, lines[line], textpos.centery))
         game['background'].blit(text, textpos)
         game['screen'].blit(game['background'], (0, 0))
     pygame.display.flip()
