@@ -155,11 +155,27 @@ def takePhoto(chdkptp):
     waitForInput(chdkptp.stdout)
 
 
-def displayPhoto(filename, game, sleep=None, width=800, height=1066):
+def displayPhoto(filename, game, sleep=None, size=None):
     if sleep is None:
         sleep = config['displayPhotoFor']
+
+    # Blank the screen
+    game['background'].fill(config['bgcolor'])
+
     img = pygame.image.load(filename)
-    img = pygame.transform.scale(img, (height, width))
+
+    if size is None:
+        imgsize = img.get_rect().size
+        bgsize = game['background'].get_rect()
+        print(bgsize)
+        print(imgsize)
+        scale = imgsize[0]/bgsize[2]
+        if imgsize[0] < imgsize[1]:
+            scale = imgsize[1]/bgsize[3]
+        size = (int(imgsize[0]/scale), int(imgsize[1]/scale))
+        print(size)
+
+    img = pygame.transform.scale(img, size)
     imgposition = img.get_rect()
     imgposition.centerx = game['background'].get_rect().centerx
     imgposition.centery = game['background'].get_rect().centery
