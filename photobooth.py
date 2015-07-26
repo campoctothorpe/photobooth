@@ -112,6 +112,7 @@ def takePhotoSet(chdkptp, game):
     chdkptp.stdin.write(b"q\n")
     waitForInput(chdkptp.stdout)
 
+
 def doCountdown(game):
     countdown = config['countdown']
     while countdown >= 0:
@@ -119,7 +120,7 @@ def doCountdown(game):
         if countdown > 0:
             renderText(str(countdown), game, fontSize=1500)
         elif countdown == 0:
-            renderText("smile", game)
+            renderText("smile!", game, fontSize=200)
         countdown -= 1
         time.sleep(config['countdownSpeed'])
 
