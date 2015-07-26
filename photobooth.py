@@ -6,6 +6,7 @@ import configparser
 import sys
 import time
 import calendar
+import Image
 
 config = {
     "photostorage": "Pictures",
@@ -13,7 +14,7 @@ config = {
     "fullscreen": "-w" not in sys.argv,  # -w for windowed
     "bgcolor": (0, 0, 0),
     "textcolor": (255, 255, 255),
-    "displayTimeout": 5,
+    "displayPhotoFor": 5,
     "photosPerSet": 4,
     "countdown": 4,
     "countdownSpeed": 1
@@ -101,7 +102,7 @@ def displayPhoto(filename, game):
     game['screen'].blit(game['background'], (0, 0))
     pygame.display.flip()
     game['clock'].tick()
-    time.sleep(config['displayTimeout'])
+    time.sleep(config['displayPhotoFor'])
 
 
 def waitForTrigger(game):
