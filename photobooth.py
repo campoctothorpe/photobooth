@@ -130,7 +130,7 @@ def takePhotoSet(chdkptp, game):
         os.rename("%s-last.jpg" % filename, "%s-%s.jpg" % (filename, photonumber))
         if photonumber != config['photosPerSet']-1:
             # Don't display the last picture because we're going to show it in the strip
-            displayPhoto("%s-%s.jpg" % (filename, photonumber), game)
+            displayPhoto("%s-%s.jpg" % (filename, photonumber), game, sleep=20)
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
     strip = makeStrip(filename)
