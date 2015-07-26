@@ -17,7 +17,11 @@ config = {
     "displayPhotoFor": 5,
     "photosPerSet": 4,
     "countdown": 4,
-    "countdownSpeed": 1
+    "countdownSpeed": 1,
+    "framesize": 100,
+    "padding": 100,
+    "bottomframesize": 800,
+    "bottom": "bottom.png"
 }
 
 
@@ -101,23 +105,28 @@ def renderText(textstr, game, fontSize=1000, top=None):
 
 def makeSet(prefix, mode="RGB", color="white"):
     images = []
+    frame = config['framesize']
+    bottomframe = config['bottomframesize']
     for i in range(0, config['photosPerSet']):
         images.append(Image.open("%s-%s.jpg" % (prefix, i)))
-    width = images[0].size[0] * 2
-    height = images[0].size[1] * 2
+    width = (images[0].size[0] * 2) + (frame * 2) + config['padding']
+    height = (images[0].size[1] * 2) + frame + bottomframe + config['padding']
     image = Image.new(mode, (width, height), color)
 
-    left, upper = 0, 0
+    left, upper = frame, frame
     for img in images:
         image.paste(img, (left, upper))
-        if left == 0:
-            left += img.size[0]
+        if left == frame:
+            left += img.size[0] + config['padding']
         else:
-            left = 0
-            upper += img.size[1]
+            left = frame
+            upper += img.size[1] + config['padding']
 
-    outputName = "%s-strip.jpg" % prefix
-    image.save(outputName, "JPEG", quality=80, optimize=True)
+    bottom = Image.open(config['bottom'])
+    bottomposition = (0, (images[0].size[1] * 2) + frame + config['padding'])
+    image.paste(bottom, bottomposition, bottom)
+    outputName = "%s-set.jpg" % prefix
+    image.save(outputName, "JPEG", quality=90, optimize=True)
     return outputName
 
 
