@@ -120,7 +120,7 @@ def doCountdown(game):
     while countdown >= 0:
         game['background'].fill(config['bgcolor'])
         if countdown > 0:
-            renderText(str(countdown), game, fontSize=1500, top=0)
+            renderText(str(countdown), game, fontSize=1500, top=-75)
         elif countdown == 0:
             renderText("smile!", game, fontSize=500)
         countdown -= 1
