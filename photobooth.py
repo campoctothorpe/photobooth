@@ -99,18 +99,22 @@ def renderText(textstr, game, fontSize=1000, top=None):
     game['clock'].tick()
 
 
-def makeStrip(prefix, mode="RGB", color="white"):
+def makeSet(prefix, mode="RGB", color="white"):
     images = []
     for i in range(0, config['photosPerSet']):
         images.append(Image.open("%s-%s.jpg" % (prefix, i)))
-    width = max(img.size[0] for img in images)
-    height = sum(img.size[1] for img in images)
+    width = images[0].size[0] * 2
+    height = images[0].size[1] * 2
     image = Image.new(mode, (width, height), color)
 
     left, upper = 0, 0
     for img in images:
         image.paste(img, (left, upper))
-        upper += img.size[1]
+        if left == 0:
+            left += img.size[1]
+        else:
+            left = 0
+            upper += img.size[1]
 
     outputName = "%s-strip.jpg" % prefix
     image.save(outputName, "JPEG", quality=80, optimize=True)
@@ -133,8 +137,8 @@ def takePhotoSet(chdkptp, game):
             displayPhoto("%s-%s.jpg" % (filename, photonumber), game, sleep=20)
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
-    strip = makeStrip(filename)
-    displayPhoto(strip, game)
+    photoset = makeSet(filename)
+    displayPhoto(photoset, game)
     waitForInput(chdkptp.stdout)
 
 
