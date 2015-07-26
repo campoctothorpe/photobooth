@@ -111,7 +111,7 @@ def makeSet(prefix, mode="RGB", color="white"):
     for img in images:
         image.paste(img, (left, upper))
         if left == 0:
-            left += img.size[1]
+            left += img.size[0]
         else:
             left = 0
             upper += img.size[1]
