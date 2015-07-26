@@ -6,7 +6,6 @@ import configparser
 import sys
 import time
 import calendar
-import Image
 
 config = {
     "photostorage": "Pictures",
@@ -155,7 +154,13 @@ def main():
     waitForInput(chdkptp.stdout)
     print("Annnd into the loop we go!")
 
-    game = {"screen": screen, "background": background, "clock": c}
+    game = {
+        "screen": screen,
+        "background": background,
+        "clock": c,
+        "size": size
+    }
+
     while True:
         waitForTrigger(game)
         takePhotoSet(chdkptp, game)
