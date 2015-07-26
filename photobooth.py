@@ -107,7 +107,7 @@ def displayPhoto(filename, game):
 def waitForTrigger(game):
     triggered = False
     game['background'].fill(config['bgcolor'])
-    renderText("Press Space to begin", game, fontSize=200)
+    renderText("Press the #BigRedButton", game, fontSize=200)
     while not triggered:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
