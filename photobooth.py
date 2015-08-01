@@ -223,11 +223,10 @@ def waitForTrigger(game):
                     triggered = True
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
-            if BEAGLE:
-                print(GPIO.input(config['pin']))
-                if GPIO.input(config['pin']) == 1:
-                    print("GPIO Pin %s triggered!" % config['pin'])
-                    triggered = True
+        if BEAGLE:
+            if GPIO.input(config['pin']) == 1:
+                print("GPIO Pin %s triggered!" % config['pin'])
+                triggered = True
         time.sleep(0.05)
     print("triggered!!")
 
