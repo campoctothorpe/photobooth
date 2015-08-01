@@ -8,6 +8,13 @@ import time
 from PIL import Image
 import calendar
 
+BEAGLE = False
+try:
+    from Adafruit_BBIO import GPIO
+    BEAGLE = True
+except ImportError:
+    print("Adafruit_BBIO.GPIO not available, assuming not a beagle")
+
 config = {
     "photostorage": "Pictures",
     "chdkptp": "chdkptp",
@@ -21,7 +28,8 @@ config = {
     "framesize": 100,
     "padding": 100,
     "bottomframesize": 800,
-    "bottom": "bottom.png"
+    "bottom": "bottom.png",
+    "pin": "P8_12"
 }
 
 
@@ -201,7 +209,10 @@ def displayPhoto(filename, game, sleep=None, size=None):
 
 def waitForTrigger(game):
     triggered = False
-    renderText("Press the #BigRedButton to begin", game, fontSize=200)
+    text = "Press the space bar to begin"
+    if BEAGLE:
+        text = "Press the #BigRedButton to begin"
+    renderText(text, game, fontSize=200)
     while not triggered:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -211,12 +222,18 @@ def waitForTrigger(game):
                     triggered = True
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
+            if BEAGLE:
+                if GPIO.input(config['pin']):
+                    triggered = True
         time.sleep(0.05)
     print("triggered!!")
 
 
 def main():
     configure()
+
+    if BEAGLE:
+        GPIO.setup(config['pin'], GPIO.IN)
 
     pygame.init()
     pygame.mouse.set_visible(False)
