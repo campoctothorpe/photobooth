@@ -219,11 +219,13 @@ def waitForTrigger(game):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == 32:  # spacebar
+                    print("Spacebar pressed!")
                     triggered = True
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
             if BEAGLE:
-                if GPIO.input(config['pin']):
+                if GPIO.input(config['pin']) == 1:
+                    print("GPIO Pin %s triggered!" % config['pin'])
                     triggered = True
         time.sleep(0.05)
     print("triggered!!")
@@ -233,6 +235,7 @@ def main():
     configure()
 
     if BEAGLE:
+        print("Configuring GPIO pin %s" % config['pin'])
         GPIO.setup(config['pin'], GPIO.IN)
 
     pygame.init()
