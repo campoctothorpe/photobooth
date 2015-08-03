@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import pygame
 import subprocess
+import logging
 import os
 import configparser
 import sys
@@ -8,12 +9,14 @@ import time
 from PIL import Image
 import calendar
 
+logging.basicConfig(level=logging.DEBUG)
+
 BEAGLE = False
 try:
     from Adafruit_BBIO import GPIO
     BEAGLE = True
 except ImportError:
-    print("Adafruit_BBIO.GPIO not available, assuming not a beagle")
+    logging.info("Adafruit_BBIO.GPIO not available, assuming not a beagle")
 
 config = {
     "photostorage": "Pictures",
@@ -48,16 +51,16 @@ def configure():
                         for color in range(len(config[key])):
                             config[key][color] = int(config[key][color].strip())
                         config[key] = tuple(config[key])
-    print(config)
+    logging.debug("Configured")
 
 
 def waitForInput(stream, waitFor=">"):
     char = stream.read(1).decode('utf-8')
+    line = char
     while char != waitFor:
-        print(char, end="")
-        sys.stdout.flush()
         char = stream.read(1).decode('utf-8')
-    print(char)
+        line += char
+    logging.debug(line)
 
 
 ## The following code was stolen from http://www.pygame.org/wiki/TextWrapping
@@ -94,6 +97,7 @@ def wrapline(text, font, maxwidth):
 
 
 def renderText(textstr, game, fontSize=1000, top=None):
+    logging.info("Rendering text %s", textstr)
     font = pygame.font.Font(None, fontSize)
     lines = wrapline(textstr, font, game['size'][0]-100)
     height = font.size(lines[0])[1]
@@ -112,6 +116,7 @@ def renderText(textstr, game, fontSize=1000, top=None):
 
 
 def makeSet(prefix, mode="RGB", color="white"):
+    logging.info("Rendering a set of images starting with %s", prefix)
     images = []
     frame = config['framesize']
     bottomframe = config['bottomframesize']
@@ -146,16 +151,22 @@ def takePhotoSet(chdkptp, game):
     waitForInput(chdkptp.stdout)
     photonumber = 0
     while photonumber < config['photosPerSet']:
+        logging.debug('Doing countdown for picture %s', photonumber)
         doCountdown(game)
+        logging.debug('Taking photo')
         takePhoto(chdkptp)
+        logging.debug('Renaming from %s-last.jpg to %s-%s.jpg', filename, filename, photonumber)
         os.rename("%s-last.jpg" % filename, "%s-%s.jpg" % (filename, photonumber))
         if photonumber != config['photosPerSet']-1:
+            logging.debug('Displaying!')
             # Don't display the last picture because we're going to show it in the strip
             displayPhoto("%s-%s.jpg" % (filename, photonumber), game, sleep=20)
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
     photoset = makeSet(filename)
+    logging.info('Displaying set')
     displayPhoto(photoset, game)
+    logging.info('Returning to idle state')
     waitForInput(chdkptp.stdout)
 
 
@@ -177,6 +188,7 @@ def takePhoto(chdkptp):
 
 
 def displayPhoto(filename, game, sleep=None, size=None):
+    logging.info("Displaying %s", filename)
     if sleep is None:
         sleep = config['displayPhotoFor']
 
@@ -188,13 +200,13 @@ def displayPhoto(filename, game, sleep=None, size=None):
     if size is None:
         imgsize = img.get_rect().size
         bgsize = game['background'].get_rect()
-        print(bgsize)
-        print(imgsize)
+        logging.debug(bgsize)
+        logging.debug(imgsize)
         scale = imgsize[0]/bgsize[2]
         if imgsize[0] < imgsize[1]:
             scale = imgsize[1]/bgsize[3]
         size = (int(imgsize[0]/scale), int(imgsize[1]/scale))
-        print(size)
+        logging.debug(size)
 
     img = pygame.transform.scale(img, size)
     imgposition = img.get_rect()
@@ -219,23 +231,23 @@ def waitForTrigger(game):
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if event.key == 32:  # spacebar
-                    print("Spacebar pressed!")
+                    logging.debug("Spacebar pressed!")
                     triggered = True
                 elif event.key in [113, 27]:  # q, esc
                     sys.exit()
         if BEAGLE:
             if GPIO.input(config['pin']) == 1:
-                print("GPIO Pin %s triggered!" % config['pin'])
+                logging.debug("GPIO Pin %s triggered!", config['pin'])
                 triggered = True
         time.sleep(0.05)
-    print("triggered!!")
+    logging.debug("triggered!!")
 
 
 def main():
     configure()
 
     if BEAGLE:
-        print("Configuring GPIO pin %s" % config['pin'])
+        logging.debug("Configuring GPIO pin %s", config['pin'])
         GPIO.setup(config['pin'], GPIO.IN)
 
     pygame.init()
@@ -261,12 +273,12 @@ def main():
                                bufsize=0)
     waitForInput(chdkptp.stdout)
     chdkptp.stdin.write(b"c\n")
-    print("Connecting to camera....")
+    logging.debug("Connecting to camera....")
     waitForInput(chdkptp.stdout)
     chdkptp.stdin.write(b"rec\n")
-    print("Entering shooting mode...")
+    logging.debug("Entering shooting mode...")
     waitForInput(chdkptp.stdout)
-    print("Annnd into the loop we go!")
+    logging.debug("Annnd into the loop we go!")
 
     game = {
         "screen": screen,
