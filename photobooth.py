@@ -157,12 +157,12 @@ def takePhotoSet(chdkptp, game):
         takePhoto(chdkptp)
         logging.debug('Renaming from %s-last.jpg to %s-%s.jpg', filename, filename, photonumber)
         os.rename("%s-last.jpg" % filename, "%s-%s.jpg" % (filename, photonumber))
-        if photonumber != config['photosPerSet']-1:
-            logging.debug('Displaying!')
-            # Don't display the last picture because we're going to show it in the strip
-            displayPhoto("%s-%s.jpg" % (filename, photonumber), game, sleep=20)
+        logging.debug('Displaying!')
+        # Don't display the last picture because we're going to show it in the strip
+        displayPhoto("%s-%s.jpg" % (filename, photonumber), game, sleep=20)
         photonumber += 1
     chdkptp.stdin.write(b"q\n")
+    renderText("Processing...", game)
     photoset = makeSet(filename)
     logging.info('Displaying set')
     displayPhoto(photoset, game)
